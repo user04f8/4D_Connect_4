@@ -1,4 +1,4 @@
-
+raise NotImplementedError
 
 class CLI_IO:
     def __init__(self):
@@ -6,4 +6,4 @@ class CLI_IO:
 
     @staticmethod
     def render_board(board, rot=NotImplemented):
-        
+        pass
