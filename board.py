@@ -49,18 +49,19 @@ class Gravity(IntEnum):
         return loc[transpose_amt:] + loc[:transpose_amt]
 
 class Board:
-    def __init__(self, size : Tuple[int, int, int], token_history_len : int = 4):
+    def __init__(self, size : Tuple[int, int, int], token_history_len : int = 4, debug=False):
         self.tokens : np.ndarray = np.array([[[Token.empty,]*size[0]]*size[1]]*size[2], dtype='uint8')
         self.action_history = []
         self.token_history_len = token_history_len
         self.token_history = [self.tokens] * token_history_len
         self.size : Tuple[int, int, int] = size
         self.gravity : Gravity = Gravity.cli_default
+        self.debug = debug
 
     def __repr__(self):
         return f"Board({self.size})\n  tokens=\n{self.tokens}\n  gravity=\n{self.gravity}"
 
-    # cli_utils    
+    # cli_utils
     
     @staticmethod
     def tokens_cli_str(tokens):
@@ -70,10 +71,11 @@ class Board:
         return s
 
     def __str__(self):
-        
         return Board.tokens_cli_str(self.tokens) + f"\nGravity is {self.gravity.name} ({self.gravity.value})"
     
-    
+    def log(self, s : str):
+        if self.debug:
+            print(s)
 
     def highlight_row(self, x : int, y : int, gravity=None) -> np.ndarray:
         if gravity == None:
@@ -114,8 +116,7 @@ class Board:
                     prev_idx = prev_idx + gravity_parity
                 #idx = self.gravity.loc_bottom()
 
-                    
-        print('gravity applied')
+        self.log('gravity applied')
 
     @staticmethod
     def plane_loc(gravity : Gravity, x : int, y : int) -> tuple:
@@ -144,27 +145,27 @@ class Board:
             tokens = self.tokens[loc]
             n = len(tokens)
             token_placed = False
-            print(f'placing {placed_token} at {loc} in row {tokens}')
+            self.log(f'placing {placed_token} at {loc} in row {tokens}')
             if self.gravity >= 0:
                 for i in range(n-1):
                     if tokens[-i] != Token.empty:
                         self.tokens[loc][i-1] = placed_token
-                        print(f'placed {placed_token} at {loc}:{i-1} (g+)')
+                        self.log(f'placed {placed_token} at {loc}:{i-1} (g+)')
                         token_placed = True
                         break
                 if not(token_placed):
                     self.tokens[loc][-1] = placed_token
-                    print(f'placed {placed_token} at {loc}:TOP')
+                    self.log(f'placed {placed_token} at {loc}:TOP')
             else:
                 for i in range(n, 1, -1):
                     if tokens[i] != Token.empty:
                         self.tokens[loc][i+1] = placed_token
-                        print(f'placed {placed_token} at {loc}:{i+1} (g-)')
+                        self.log(f'placed {placed_token} at {loc}:{i+1} (g-)')
                         token_placed = True
                         break
                 if not(token_placed):
                     self.tokens[loc][0] = placed_token
-                    print(f'placed {placed_token} at {loc}:BOTTOM')
+                    self.log(f'placed {placed_token} at {loc}:BOTTOM')
 
 
             self.apply_gravity() # update with new placed_token
@@ -177,7 +178,7 @@ class Board:
             self.token_history.append(self.tokens)
             return True
         else:
-            print(f'unplaceable: {placed_token} at {loc}')
+            self.log(f'unplaceable: {placed_token} at {loc}')
             return False
 
 
