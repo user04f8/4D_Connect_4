@@ -53,6 +53,7 @@ class Board:
         self.tokens : np.ndarray = np.array([[[Token.empty,]*size[0]]*size[1]]*size[2], dtype='uint8')
         self.action_history = []
         self.token_history_len = token_history_len
+        self.token_history_i = 1
         self.token_history = [self.tokens] * token_history_len
         self.size : Tuple[int, int, int] = size
         self.gravity : Gravity = Gravity.cli_default
@@ -60,8 +61,6 @@ class Board:
 
     def __repr__(self):
         return f"Board({self.size})\n  tokens=\n{self.tokens}\n  gravity=\n{self.gravity}"
-
-    # cli_utils
     
     @staticmethod
     def tokens_cli_str(tokens):
@@ -91,7 +90,12 @@ class Board:
     def populate_randomly(self):
         self.tokens : np.ndarray = np.random.randint(0, 4, size=self.size, dtype='uint8')
 
-    
+    def update_token_history(self):
+        if self.token_history_len is None:
+            self.token_history.append(self.tokens)
+        else:
+            self.token_history[self.token_history_i % self.token_history_len] = self.tokens
+        self.token_history_i += 1
 
     def set_gravity(self, direction):
         self.gravity : Gravity = Gravity(direction)
@@ -175,7 +179,7 @@ class Board:
                 loc,
                 gravity
             ))
-            self.token_history.append(self.tokens)
+            self.update_token_history()
             return True
         else:
             self.log(f'unplaceable: {placed_token} at {loc}')
